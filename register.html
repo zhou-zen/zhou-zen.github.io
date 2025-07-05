@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 创造者Creator OJ系统</title>
+    <link rel="stylesheet" href="/css/auth.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1><i class="fas fa-user-plus"></i> 创建账号</h1>
+            <p>加入创造者Creator OJ系统，开启编程之旅</p>
+        </div>
+        
+        <form id="registerForm" class="auth-form">
+            <div class="form-group">
+                <label for="registerUsername"><i class="fas fa-user"></i> 用户名</label>
+                <input type="text" id="registerUsername" required placeholder="输入用户名(4-16位)">
+            </div>
+            
+            <div class="form-group">
+                <label for="registerEmail"><i class="fas fa-envelope"></i> 邮箱</label>
+                <input type="email" id="registerEmail" required placeholder="输入有效邮箱地址">
+            </div>
+            
+            <div class="form-group">
+                <label for="registerPassword"><i class="fas fa-lock"></i> 密码</label>
+                <div class="password-input-container">
+                    <input type="password" id="registerPassword" required placeholder="输入密码(至少8位)">
+                    <i class="fas fa-eye password-toggle" id="toggleRegisterPassword"></i>
+                </div>
+                <div class="password-strength">
+                    <span class="strength-bar"></span>
+                    <span class="strength-bar"></span>
+                    <span class="strength-bar"></span>
+                    <span class="strength-text">密码强度: 弱</span>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirmPassword"><i class="fas fa-lock"></i> 确认密码</label>
+                <input type="password" id="confirmPassword" required placeholder="再次输入密码">
+            </div>
+            
+            <button type="submit" class="auth-button">
+                <i class="fas fa-user-plus"></i> 注册
+            </button>
+            
+            <div class="auth-footer">
+                已有账号? <a href="/login.html">立即登录</a>
+            </div>
+        </form>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script>
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const username = document.getElementById('registerUsername').value;
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 注册中...';
+        
+        try {
+            await AuthService.register(username, email, password, confirmPassword);
+            window.location.href = '/index.html';
+        } catch (error) {
+            alert(error.message);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> 注册';
+        }
+    });
+
+    // 密码显示/隐藏切换
+    document.getElementById('toggleRegisterPassword').addEventListener('click', function() {
+        const passwordInput = document.getElementById('registerPassword');
+        const confirmInput = document.getElementById('confirmPassword');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            confirmInput.type = 'text';
+            this.classList.replace('fa-eye', 'fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            confirmInput.type = 'password';
+            this.classList.replace('fa-eye-slash', 'fa-eye');
+        }
+    });
+
+    // 密码强度检查
+    document.getElementById('registerPassword').addEventListener('input', function() {
+        const strengthBars = document.querySelectorAll('.strength-bar');
+        const strengthText = document.querySelector('.strength-text');
+        const password = this.value;
+        
+        // 重置
+        strengthBars.forEach(bar => bar.style.backgroundColor = '#e2e8f0');
+        strengthText.textContent = '密码强度: 弱';
+        
+        if (password.length === 0) return;
+        
+        let strength = 0;
+        if (password.length >= 8) strength++;
+        if (/[A-Z]/.test(password)) strength++;
+        if (/[0-9]/.test(password)) strength++;
+        if (/[^A-Za-z0-9]/.test(password)) strength++;
+        
+        // 更新UI
+        const colors = ['#f56565', '#f6ad55', '#48bb78', '#38a169'];
+        for (let i = 0; i < strength; i++) {
+            strengthBars[i].style.backgroundColor = colors[i];
+        }
+        
+        const labels = ['弱', '一般', '强', '非常强'];
+        strengthText.textContent = `密码强度: ${labels[strength - 1] || '弱'}`;
+    });
+    </script>
+</body>
+</html>
